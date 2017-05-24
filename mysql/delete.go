@@ -7,8 +7,9 @@ import (
 )
 
 type DeleteQuery struct {
-	Errors Errors
-	Stmt   *parser.Delete
+	QueryBase
+
+	Stmt *parser.Delete
 }
 
 func (q *DeleteQuery) From(froms ...interface{}) *DeleteQuery {

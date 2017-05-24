@@ -1,24 +1,71 @@
 package qb
 
 import (
+	"database/sql"
 	"log"
 	"strings"
 
 	parser "github.com/morphar/sqlparsers/mysql"
 )
 
-// var db *sql.DB
+type Query interface {
+	SQL() (string, []interface{}, error)
+	setDB(*sql.DB)
+	queryIsValid() (bool, error)
+}
+
+type Errors []error
+
+type Column struct {
+	*parser.AliasedExpr
+}
+
+type Table struct {
+	*parser.AliasedTableExpr
+}
 
 func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	// var err error
-	// if db, err = dbConnect(); err != nil {
-	// 	log.Fatal(err)
-	// }
+}
+
+func Parse(sql string) (Query, error) {
+	stmt, err := parser.Parse(sql)
+	if err != nil {
+		return nil, err
+	}
+
+	switch s := stmt.(type) {
+	case *parser.Insert:
+		q := Insert()
+		q.Stmt = s
+		q.QueryBase.Stmt = q.Stmt
+		return q, nil
+
+	case *parser.Select:
+		q := Select()
+		q.Stmt = s
+		q.QueryBase.Stmt = q.Stmt
+		return q, nil
+
+	case *parser.Update:
+		q := Update()
+		q.Stmt = s
+		q.QueryBase.Stmt = q.Stmt
+		return q, nil
+
+	case *parser.Delete:
+		q := Delete()
+		q.Stmt = s
+		q.QueryBase.Stmt = q.Stmt
+		return q, nil
+	}
+
+	return nil, nil
 }
 
 func Insert(rows ...interface{}) *InsertQuery {
 	insert := &InsertQuery{Stmt: &parser.Insert{Action: "insert"}}
+	insert.QueryBase.Stmt = insert.Stmt
 	if len(rows) > 0 {
 		insert.Insert(rows...)
 	}
@@ -27,6 +74,7 @@ func Insert(rows ...interface{}) *InsertQuery {
 
 func Select(fields ...interface{}) *SelectQuery {
 	slct := &SelectQuery{Stmt: &parser.Select{}}
+	slct.QueryBase.Stmt = slct.Stmt
 	if len(fields) > 0 {
 		slct.Select(fields...)
 	}
@@ -34,15 +82,15 @@ func Select(fields ...interface{}) *SelectQuery {
 }
 
 func Update() *UpdateQuery {
-	return &UpdateQuery{Stmt: &parser.Update{}}
+	update := &UpdateQuery{Stmt: &parser.Update{}}
+	update.QueryBase.Stmt = update.Stmt
+	return update
 }
 
 func Delete() *DeleteQuery {
-	return &DeleteQuery{Stmt: &parser.Delete{}}
-}
-
-type Column struct {
-	*parser.AliasedExpr
+	del := &DeleteQuery{Stmt: &parser.Delete{}}
+	del.QueryBase.Stmt = del.Stmt
+	return del
 }
 
 func (c Column) As(as string) Column {
@@ -89,10 +137,6 @@ func C(s interface{}) Column {
 	return Column{newAliasedExpr(db, table, col)}
 }
 
-type Table struct {
-	*parser.AliasedTableExpr
-}
-
 func (t Table) String() (str string) {
 	tblName := t.Expr.(parser.TableName)
 	if tblName.Qualifier.String() != "" {
@@ -131,8 +175,6 @@ func T(s interface{}) Table {
 
 	return Table{newAliasedTableExpr(db, table)}
 }
-
-type Errors []error
 
 func (e Errors) Error() string {
 	str := ""

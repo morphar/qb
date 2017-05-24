@@ -12,8 +12,9 @@ import (
 )
 
 type InsertQuery struct {
-	Errors Errors
-	Stmt   *parser.Insert
+	QueryBase
+
+	Stmt *parser.Insert
 }
 
 func (q *InsertQuery) Insert(rows ...interface{}) *InsertQuery {

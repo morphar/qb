@@ -7,8 +7,9 @@ import (
 )
 
 type UpdateQuery struct {
-	Errors Errors
-	Stmt   *parser.Update
+	QueryBase
+
+	Stmt *parser.Update
 }
 
 // Convenience

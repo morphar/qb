@@ -7,8 +7,9 @@ import (
 )
 
 type SelectQuery struct {
-	Errors Errors
-	Stmt   *parser.Select
+	QueryBase
+
+	Stmt *parser.Select
 }
 
 func (q *SelectQuery) Select(fields ...interface{}) *SelectQuery {
