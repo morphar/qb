@@ -42,16 +42,16 @@ func (q *DeleteQuery) Where(wheres ...parser.Expr) *DeleteQuery {
 	return q
 }
 
-func (q *DeleteQuery) SQL() (sql string, params []interface{}, err error) {
+func (q *DeleteQuery) SQL() (sql string, err error) {
 	if isValid, err := q.queryIsValid(); !isValid {
-		return "", nil, err
+		return "", err
 	}
 
 	if len(q.Errors) > 0 {
 		err = errors.New(q.Errors.Error())
 	}
 
-	return parser.GenerateParsedQuery(q.Stmt).Query, nil, err
+	return parser.GenerateParsedQuery(q.Stmt).Query, err
 }
 
 // Tries to verify if the query is ready for export to SQL

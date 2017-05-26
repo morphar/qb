@@ -33,14 +33,23 @@ func (c Column) Set(value interface{}) parser.UpdateExpr {
 // Order expressions
 
 func (c Column) Asc() *parser.Order {
-	return &parser.Order{Expr: c.Expr, Direction: "asc"}
+	return &parser.Order{
+		Expr:      c.SelectExpr.(*parser.AliasedExpr).Expr,
+		Direction: "asc",
+	}
 }
 func (c Column) Desc() *parser.Order {
-	return &parser.Order{Expr: c.Expr, Direction: "desc"}
+	return &parser.Order{
+		Expr:      c.SelectExpr.(*parser.AliasedExpr).Expr,
+		Direction: "desc",
+	}
 }
 
 // Operator comparison expressions
 
+// TODO: Isn't it more natual/right to have Eq, etc. on an expression, rather
+// than forcing the use of a column?
+// It might make sense to have a comparator... e.g.: Compare(operator, expr1, expr2)
 func (c Column) Eq(value interface{}) ComparisonExpr {
 	if v, ok := value.(bool); ok {
 		return ComparisonExpr{newComparisonExpr("is", c, v)}
@@ -74,7 +83,7 @@ func (c Column) Between(from, to interface{}) RangeCond {
 	return RangeCond{
 		&parser.RangeCond{
 			Operator: "between",
-			Left:     c.Expr,
+			Left:     c.SelectExpr.(*parser.AliasedExpr).Expr,
 			From:     convertToExpr(from),
 			To:       convertToExpr(to),
 		},
@@ -84,7 +93,7 @@ func (c Column) NotBetween(from, to interface{}) RangeCond {
 	return RangeCond{
 		&parser.RangeCond{
 			Operator: "not between",
-			Left:     c.Expr,
+			Left:     c.SelectExpr.(*parser.AliasedExpr).Expr,
 			From:     convertToExpr(from),
 			To:       convertToExpr(to),
 		},
@@ -120,20 +129,50 @@ func (c Column) NotILike(value interface{}) ComparisonExpr {
 // Is comparison expressions
 
 func (c Column) IsNull() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS NULL", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS NULL",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }
 func (c Column) IsNotNull() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS NOT NULL", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS NOT NULL",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }
 func (c Column) IsTrue() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS TRUE", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS TRUE",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }
 func (c Column) IsNotTrue() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS NOT TRUE", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS NOT TRUE",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }
 func (c Column) IsFalse() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS FALSE", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS FALSE",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }
 func (c Column) IsNotFalse() IsExpr {
-	return IsExpr{&parser.IsExpr{Operator: "IS NOT FALSE", Expr: c.Expr}}
+	return IsExpr{
+		&parser.IsExpr{
+			Operator: "IS NOT FALSE",
+			Expr:     c.SelectExpr.(*parser.AliasedExpr).Expr,
+		},
+	}
 }

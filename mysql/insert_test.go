@@ -65,17 +65,17 @@ func TestSimpleMapInsert(t *testing.T) {
 	}
 
 	insert := Insert(rows[0], rows[1]).Into("items")
-	_, _, err := insert.SQL()
+	_, err := insert.SQL()
 	assert.NoError(t, err)
 
 	insert = Insert(rows).Into("items")
-	_, _, err = insert.SQL()
+	_, err = insert.SQL()
 	assert.NoError(t, err)
 }
 
 func TestSimpleStructInsert(t *testing.T) {
 	insert := Insert(testRow{1, "name"}, testRow{2, "other name"}).Into("items")
-	_, _, err := insert.SQL()
+	_, err := insert.SQL()
 	assert.NoError(t, err)
 
 	id1 := 1
@@ -87,7 +87,11 @@ func TestSimpleStructInsert(t *testing.T) {
 	row2 := testRowPointers{&id2, &name2}
 
 	insert = Insert(row1, row2).Into("items")
-	_, _, err = insert.SQL()
+	_, err = insert.SQL()
+	assert.NoError(t, err)
+
+	insert = Insert([]testRowPointers{row1, row2}).Into("items")
+	_, err = insert.SQL()
 	assert.NoError(t, err)
 }
 

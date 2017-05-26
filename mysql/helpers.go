@@ -95,7 +95,7 @@ func newUpdateExpr(c Column, val interface{}) parser.UpdateExpr {
 	// name := convertToExpr(c)
 	v := convertToExpr(val)
 	return parser.UpdateExpr{
-		Name: c.Expr.(*parser.ColName),
+		Name: c.SelectExpr.(*parser.AliasedExpr).Expr.(*parser.ColName),
 		Expr: v,
 	}
 }
@@ -106,7 +106,7 @@ func convertToExpr(val interface{}) parser.Expr {
 		return v
 
 	case Column:
-		return v.Expr
+		return v.SelectExpr.(*parser.AliasedExpr).Expr
 
 	case RangeCond:
 		return v.RangeCond // Is this correct???

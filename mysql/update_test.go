@@ -22,21 +22,21 @@ func TestUpdateIsValid(t *testing.T) {
 	assert.True(t, isValid)
 	assert.NoError(t, err)
 
-	q, _, err := upd.SQL()
+	sql, err := upd.SQL()
 	assert.NoError(t, err)
-	assert.NotEmpty(t, q)
+	assert.NotEmpty(t, sql)
 }
 
 func TestUpdate(t *testing.T) {
 	upd := Update()
 	upd.Update("tbl").Set(C("testcol").Set("123 abc"))
-	sql, _, err := upd.SQL()
+	sql, err := upd.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "update tbl set testcol = '123 abc'", sql)
 
 	upd = Update()
 	upd.Update("tbl").Set(C("testcol").Eq("123 abc"))
-	sql, _, err = upd.SQL()
+	sql, err = upd.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "update tbl set testcol = '123 abc'", sql)
 
@@ -44,7 +44,7 @@ func TestUpdate(t *testing.T) {
 	upd.Update("tbl1", "tbl2")
 	upd.Set(C("tbl1.testcol1").Set(123))
 	upd.Set(C("tbl2.testcol2").Eq(321))
-	sql, _, err = upd.SQL()
+	sql, err = upd.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "update tbl1, tbl2 set tbl1.testcol1 = 123, tbl2.testcol2 = 321", sql)
 }

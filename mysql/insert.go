@@ -27,7 +27,7 @@ func (q *InsertQuery) Insert(rows ...interface{}) *InsertQuery {
 	}
 
 	for _, col := range cols {
-		q.Stmt.Columns = append(q.Stmt.Columns, col.Expr.(*parser.ColName).Name)
+		q.Stmt.Columns = append(q.Stmt.Columns, col.SelectExpr.(*parser.AliasedExpr).Expr.(*parser.ColName).Name)
 	}
 
 	parserRows := parser.Values{}
@@ -44,21 +44,21 @@ func (q *InsertQuery) Insert(rows ...interface{}) *InsertQuery {
 }
 
 func (q *InsertQuery) Into(into interface{}) *InsertQuery {
-	q.Stmt.Table = T(into).Expr.(parser.TableName)
+	q.Stmt.Table = T(into).TableExpr.(*parser.AliasedTableExpr).Expr.(parser.TableName)
 
 	return q
 }
 
-func (q *InsertQuery) SQL() (sql string, params []interface{}, err error) {
+func (q *InsertQuery) SQL() (sql string, err error) {
 	if isValid, err := q.queryIsValid(); !isValid {
-		return "", nil, err
+		return "", err
 	}
 
 	if len(q.Errors) > 0 {
 		err = errors.New(q.Errors.Error())
 	}
 
-	return parser.GenerateParsedQuery(q.Stmt).Query, nil, err
+	return parser.GenerateParsedQuery(q.Stmt).Query, err
 }
 
 //
@@ -162,6 +162,9 @@ func (q *InsertQuery) getFieldsValues(val interface{}) (cols []Column, vals []in
 
 			var val interface{}
 			if field.Type().Kind() == reflect.Ptr {
+				if field.IsNil() {
+					continue
+				}
 				val = field.Elem().Interface()
 			} else {
 				val = field.Interface()

@@ -11,28 +11,28 @@ func TestBaseParse(t *testing.T) {
 	// Parse insert
 	stmt, err := Parse("INSERT INTO users (fname) VALUES('first')")
 	insert := stmt.(*InsertQuery)
-	sql, _, err := insert.SQL()
+	sql, err := insert.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "insert into users(fname) values ('first')", sql)
 
 	// Parse select
 	stmt, err = Parse("SELECT * FROM users")
 	slct := stmt.(*SelectQuery)
-	sql, _, err = slct.SQL()
+	sql, err = slct.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "select * from users", sql)
 
 	// Parse update
 	stmt, err = Parse("UPDATE users SET lname='last' WHERE id=1")
 	update := stmt.(*UpdateQuery)
-	sql, _, err = update.SQL()
+	sql, err = update.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "update users set lname = 'last' where id = 1", sql)
 
 	// Parse delete
 	stmt, err = Parse("DELETE FROM users WHERE id=1")
 	del := stmt.(*DeleteQuery)
-	sql, _, err = del.SQL()
+	sql, err = del.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from users where id = 1", sql)
 

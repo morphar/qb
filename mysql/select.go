@@ -19,7 +19,12 @@ func (q *SelectQuery) Select(fields ...interface{}) *SelectQuery {
 
 	if len(fields) > 0 {
 		for _, field := range fields {
-			q.Stmt.SelectExprs = append(q.Stmt.SelectExprs, C(field))
+
+			if col, ok := field.(Column); ok {
+				q.Stmt.SelectExprs = append(q.Stmt.SelectExprs, col)
+			} else {
+				q.Stmt.SelectExprs = append(q.Stmt.SelectExprs, C(field))
+			}
 		}
 	} else {
 		q.Stmt.SelectExprs = append(q.Stmt.SelectExprs, C("*"))
@@ -60,57 +65,57 @@ func (q *SelectQuery) Where(wheres ...parser.Expr) *SelectQuery {
 	return q
 }
 
-func (q *SelectQuery) Join(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) Join(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("join", table, on)
 }
-func (q *SelectQuery) FullJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) FullJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("full join", table, on)
 }
-func (q *SelectQuery) LeftJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) LeftJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("left join", table, on)
 }
-func (q *SelectQuery) RightJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) RightJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("right join", table, on)
 }
-func (q *SelectQuery) CrossJoin(table Table) *SelectQuery {
+func (q *SelectQuery) CrossJoin(table interface{}) *SelectQuery {
 	return q.join("cross join", table, nil)
 }
-func (q *SelectQuery) NaturalJoin(table Table) *SelectQuery {
+func (q *SelectQuery) NaturalJoin(table interface{}) *SelectQuery {
 	return q.join("natural join", table, nil)
 }
-func (q *SelectQuery) NaturalLeftJoin(table Table) *SelectQuery {
+func (q *SelectQuery) NaturalLeftJoin(table interface{}) *SelectQuery {
 	return q.join("natural left join", table, nil)
 }
-func (q *SelectQuery) NaturalRightJoin(table Table) *SelectQuery {
+func (q *SelectQuery) NaturalRightJoin(table interface{}) *SelectQuery {
 	return q.join("natural right join", table, nil)
 }
-func (q *SelectQuery) NaturalFullJoin(table Table) *SelectQuery {
+func (q *SelectQuery) NaturalFullJoin(table interface{}) *SelectQuery {
 	return q.join("natural full join", table, nil)
 }
-func (q *SelectQuery) OuterJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) OuterJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("outer join", table, on)
 }
-func (q *SelectQuery) FullOuterJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) FullOuterJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("full outer join", table, on)
 }
-func (q *SelectQuery) LeftOuterJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) LeftOuterJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("left outer join", table, on)
 }
-func (q *SelectQuery) RightOuterJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) RightOuterJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("right outer join", table, on)
 }
-func (q *SelectQuery) InnerJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) InnerJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("inner join", table, on)
 }
-func (q *SelectQuery) LeftInnerJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) LeftInnerJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("left inner join", table, on)
 }
-func (q *SelectQuery) RightInnerJoin(table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) RightInnerJoin(table interface{}, on parser.Expr) *SelectQuery {
 	return q.join("right inner join", table, on)
 }
 
 // on is basically a where expr...
-func (q *SelectQuery) join(typ string, table Table, on parser.Expr) *SelectQuery {
+func (q *SelectQuery) join(typ string, table interface{}, on parser.Expr) *SelectQuery {
 	// If FROM is not set, we have nothing to join with...
 	if q.Stmt.From == nil {
 		return q
@@ -122,7 +127,7 @@ func (q *SelectQuery) join(typ string, table Table, on parser.Expr) *SelectQuery
 		&parser.JoinTableExpr{
 			Join:      typ,
 			LeftExpr:  newLeft, // Maybe we can do this directly??
-			RightExpr: table,
+			RightExpr: T(table),
 			On:        on,
 		},
 	}
@@ -148,7 +153,7 @@ func (q *SelectQuery) GroupBy(groupBys ...interface{}) *SelectQuery {
 	}
 
 	for _, groupBy := range groupBys {
-		q.Stmt.GroupBy = append(q.Stmt.GroupBy, C(groupBy).Expr)
+		q.Stmt.GroupBy = append(q.Stmt.GroupBy, C(groupBy).SelectExpr.(*parser.AliasedExpr).Expr)
 	}
 
 	return q
@@ -167,16 +172,16 @@ func (q *SelectQuery) Limit(offset, limit int) *SelectQuery {
 	return q
 }
 
-func (q *SelectQuery) SQL() (sql string, params []interface{}, err error) {
+func (q *SelectQuery) SQL() (sql string, err error) {
 	if isValid, err := q.queryIsValid(); !isValid {
-		return "", nil, err
+		return "", err
 	}
 
 	if len(q.Errors) > 0 {
 		err = errors.New(q.Errors.Error())
 	}
 
-	return parser.GenerateParsedQuery(q.Stmt).Query, nil, err
+	return parser.GenerateParsedQuery(q.Stmt).Query, err
 }
 
 // Tries to verify if the query is ready for export to SQL

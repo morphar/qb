@@ -40,8 +40,8 @@ func (q QueryBuilder) Select(fields ...interface{}) *SelectQuery {
 	return s
 }
 
-func (q QueryBuilder) Update() *UpdateQuery {
-	u := Update()
+func (q QueryBuilder) Update(tables ...interface{}) *UpdateQuery {
+	u := Update(tables...)
 	u.db = q.db
 	return u
 }

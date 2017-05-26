@@ -17,37 +17,38 @@ func TestDeleteIsValid(t *testing.T) {
 	assert.True(t, isValid)
 	assert.NoError(t, err)
 
-	q, _, err := del.SQL()
+	sql, err := del.SQL()
 	assert.NoError(t, err)
-	assert.NotEmpty(t, q)
+	assert.NotEmpty(t, sql)
 }
 
 func TestDelete(t *testing.T) {
 	del := Delete()
 	del.From("test")
-	sql, _, _ := del.SQL()
+	sql, err := del.SQL()
+	assert.NoError(t, err)
 	assert.Equal(t, "delete from test", sql)
 }
 
 func TestDeleteFrom(t *testing.T) {
 	del := Delete().From("test")
 
-	sql, _, err := del.SQL()
+	sql, err := del.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test", sql)
 
 	ds2 := del.From("test2")
-	sql, _, err = ds2.SQL()
+	sql, err = ds2.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test2", sql)
 
 	ds2 = del.From("test2", "test3")
-	sql, _, err = ds2.SQL()
+	sql, err = ds2.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test2, test3", sql)
 
 	ds2 = del.From(T("test2").As("test_2"), "test3")
-	sql, _, err = ds2.SQL()
+	sql, err = ds2.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test2 as test_2, test3", sql)
 }
@@ -56,7 +57,7 @@ func TestDeleteEmptyWhere(t *testing.T) {
 	del := Delete().From("test")
 
 	b := del.Where()
-	sql, _, err := b.SQL()
+	sql, err := b.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test", sql)
 }
@@ -70,7 +71,7 @@ func TestDeleteWhere(t *testing.T) {
 		C("a").Eq(false),
 		C("a").Neq(false),
 	)
-	sql, _, err := del.SQL()
+	sql, err := del.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test where a is true and a is not true and a is false and a is not false", sql)
 
@@ -83,7 +84,7 @@ func TestDeleteWhere(t *testing.T) {
 		C("e").Lt("e"),
 		C("f").Lte("f"),
 	)
-	sql, _, err = del.SQL()
+	sql, err = del.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test where a = 'a' and b != 'b' and c > 'c' and d >= 'd' and e < 'e' and f <= 'f'", sql)
 }
@@ -104,10 +105,10 @@ func TestDeleteWhereChain(t *testing.T) {
 	b := del2.Where(
 		C("b").Eq("B"),
 	)
-	sql, _, err := a.SQL()
+	sql, err := a.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test where x = 0 and y = 1 and z = 2 and a = 'A' and b = 'B'", sql)
-	sql, _, err = b.SQL()
+	sql, err = b.SQL()
 	assert.NoError(t, err)
 	assert.Equal(t, "delete from test where x = 0 and y = 1 and z = 2 and a = 'A' and b = 'B'", sql)
 }
