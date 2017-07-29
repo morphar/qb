@@ -1,4 +1,4 @@
-package qb
+package mysql
 
 import (
 	"testing"
@@ -36,7 +36,7 @@ func TestInsertRowColsAndVals(t *testing.T) {
 	row1 := map[string]interface{}{"some1": 1}
 	row2 := testRow{1, "name"}
 	_, _, err = insert.rowColsAndVals(row1, row2)
-	assert.EqualError(t, err, "Rows must all be of the same type. Expected map[string]interface {} got qb.testRow")
+	assert.EqualError(t, err, "Rows must all be of the same type. Expected map[string]interface {} got mysql.testRow")
 
 	row1WrongType := map[string]string{"some1": "other1"}
 	row2WrongType := map[string]string{"some2": "other2"}

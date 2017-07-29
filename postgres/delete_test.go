@@ -1,4 +1,4 @@
-package qb
+package postgres
 
 import (
 	"testing"

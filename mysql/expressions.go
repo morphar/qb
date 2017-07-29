@@ -1,4 +1,4 @@
-package qb
+package mysql
 
 import parser "github.com/morphar/sqlparsers/pkg/mysql"
 

@@ -1,4 +1,4 @@
-package qb
+package postgres
 
 import parser "github.com/morphar/sqlparsers/pkg/postgres"
 
