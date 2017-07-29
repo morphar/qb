@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 
 	parser "github.com/morphar/sqlparsers/pkg/postgres"
 	"github.com/morphar/tagstring"
@@ -62,7 +63,7 @@ func (q *InsertQuery) SQL() (sql string, err error) {
 		err = errors.New(q.Errors.Error())
 	}
 
-	return q.stmt.String(), nil
+	return q.stmt.String(), err
 }
 
 //
@@ -125,7 +126,8 @@ func (q *InsertQuery) getInsertColsAndVals(rows ...interface{}) (columns []Colum
 			rowVals := make([]interface{}, len(columns))
 			rowMap := row.(map[string]interface{})
 			for i, key := range columns {
-				rowVals[i] = rowMap[key.String()]
+				keyStr := strings.Trim(key.String(), `"`)
+				rowVals[i] = rowMap[keyStr]
 			}
 			vals = append(vals, rowVals)
 
