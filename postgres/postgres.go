@@ -80,9 +80,7 @@ func Insert(rows ...interface{}) *InsertQuery {
 func Select(fields ...interface{}) *SelectQuery {
 	slct := &SelectQuery{stmt: &parser.Select{}}
 	slct.QueryBase.stmt = slct.stmt
-	if len(fields) > 0 {
-		slct.Select(fields...)
-	}
+	slct.Select(fields...)
 	return slct
 }
 
@@ -191,14 +189,13 @@ func C(s ...interface{}) Column {
 
 	} else if len(parts) == 1 {
 		if parts[0] == "*" {
-			col = parser.UnqualifiedStar{}
+			c.SelectExpr.Expr = parser.UnqualifiedStar{}
 		} else {
-			col = parser.Name(parts[0])
+			c.SelectExpr.Expr = parser.UnresolvedName{
+				parser.Name(parts[0]),
+			}
 		}
 
-		c.SelectExpr.Expr = parser.UnresolvedName{
-			col,
-		}
 	}
 	return c
 }

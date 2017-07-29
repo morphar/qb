@@ -16,17 +16,29 @@ func (q *SelectQuery) Select(fields ...interface{}) *SelectQuery {
 		q.stmt.Select = &parser.SelectClause{}
 	}
 
-	for _, field := range fields {
+	if len(fields) > 0 {
+		for _, field := range fields {
+			selectClause := q.stmt.Select.(*parser.SelectClause)
+			selectClause.Exprs = append(selectClause.Exprs, parser.SelectExpr{
+				Expr: C(field).Expr,
+			})
+		}
+	} else {
 		selectClause := q.stmt.Select.(*parser.SelectClause)
 		selectClause.Exprs = append(selectClause.Exprs, parser.SelectExpr{
-			Expr: C(field).Expr,
+			Expr: C("*").Expr,
 		})
+
 	}
 
 	return q
 }
 
 func (q *SelectQuery) From(froms ...interface{}) *SelectQuery {
+	if q.stmt.Select == nil {
+		q.stmt.Select = &parser.SelectClause{}
+	}
+
 	selectClause := q.stmt.Select.(*parser.SelectClause)
 
 	// if selectClause.From == nil {
