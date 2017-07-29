@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 func getSortedRowMapKeys(rowMap interface{}) (keys []Column) {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 type Query interface {

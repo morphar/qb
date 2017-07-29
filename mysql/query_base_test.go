@@ -3,7 +3,7 @@ package qb
 import (
 	"testing"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 	"github.com/stretchr/testify/assert"
 )
 

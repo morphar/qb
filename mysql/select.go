@@ -3,7 +3,7 @@ package qb
 import (
 	"errors"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 type SelectQuery struct {

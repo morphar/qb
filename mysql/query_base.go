@@ -3,7 +3,7 @@ package qb
 import (
 	"database/sql"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 type QueryBase struct {

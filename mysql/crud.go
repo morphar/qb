@@ -7,7 +7,7 @@ import (
 	"log"
 	"reflect"
 
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 // TODO: We need to ensure, we don't get caught by a panic here...
@@ -125,11 +125,11 @@ func (q *QueryBase) createScanMap(resCols []string, mainStructInfo StructInfo) (
 				colInfo = C(exp.Qualifier.Name.String(), exp.Name.String())
 
 			} else {
-				return nil, errors.New("Probably an error up in here!... 1")
+				return nil, errors.New("Probably an error here!... 1")
 			}
 
 		} else {
-			return nil, errors.New("Probably an error up in here!... 2")
+			return nil, errors.New("Probably an error here!... 2")
 		}
 
 		// If table name isn't set, assume that it's the main table
@@ -142,7 +142,7 @@ func (q *QueryBase) createScanMap(resCols []string, mainStructInfo StructInfo) (
 		var ok bool
 		var curStructInfo StructInfo
 		if curStructInfo, ok = structInfoMap[tableName]; !ok {
-			return nil, errors.New("Probably an error up in here!... 3")
+			return nil, errors.New("Probably an error here!... 3")
 		}
 
 		var curCols []string
@@ -210,11 +210,11 @@ func (q *QueryBase) scanMapToStruct(resVals []interface{}, resCols []string, mai
 				colInfo = C(exp.Qualifier.Name.String(), exp.Name.String())
 
 			} else {
-				return nil, errors.New("Probably an error up in here!... 1")
+				return nil, errors.New("Probably an error here!... 1")
 			}
 
 		} else {
-			return nil, errors.New("Probably an error up in here!... 2")
+			return nil, errors.New("Probably an error here!... 2")
 		}
 
 		// If table name isn't set, assume that it's the main table
@@ -227,7 +227,7 @@ func (q *QueryBase) scanMapToStruct(resVals []interface{}, resCols []string, mai
 		var ok bool
 		var curStructInfo StructInfo
 		if curStructInfo, ok = structInfoMap[tableName]; !ok {
-			return nil, errors.New("Probably an error up in here!... 3")
+			return nil, errors.New("Probably an error here!... 3")
 		}
 
 		var curCols []string
@@ -263,7 +263,7 @@ func (q *QueryBase) scanMapToStruct(resVals []interface{}, resCols []string, mai
 					f.Set(reflect.Indirect(curVal))
 				}
 			} else {
-				errMsg := fmt.Sprintf("A match wasn't for for the request column: %s.%s", tableName, curCol)
+				errMsg := fmt.Sprintf("A match wasn't found for the request column: %s.%s", tableName, curCol)
 				return nil, errors.New(errMsg)
 			}
 		}

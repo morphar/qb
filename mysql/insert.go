@@ -8,7 +8,7 @@ import (
 
 	"github.com/Cobiro/go-utils/tagstring"
 	"github.com/Cobiro/go-utils/text"
-	parser "github.com/morphar/sqlparsers/mysql"
+	parser "github.com/morphar/sqlparsers/pkg/mysql"
 )
 
 type InsertQuery struct {

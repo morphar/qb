@@ -1,6 +1,6 @@
 package qb
 
-import parser "github.com/morphar/sqlparsers/mysql"
+import parser "github.com/morphar/sqlparsers/pkg/mysql"
 
 func And(left, right parser.Expr) *parser.AndExpr {
 	return &parser.AndExpr{Left: left, Right: right}

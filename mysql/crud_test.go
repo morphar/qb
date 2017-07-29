@@ -134,12 +134,12 @@ func TestCRUD(t *testing.T) {
 
 	var posts []BlogPosts
 	q := New(db)
-	slct := q.Select("blog_posts.id", "blog_posts.title", "users.*")
+	slct := q.Select("blog_posts.*", "users.*")
 	slct.From("blog_posts")
 	slct.LeftJoin("users", C("users.id").Eq(C("blog_posts.users_id")))
 	sql, err := slct.SQL()
 	assert.NoError(t, err)
-	expectedQuery := "select blog_posts.id, blog_posts.title, users.*"
+	expectedQuery := "select blog_posts.*, users.*"
 	expectedQuery += " from blog_posts left join users on users.id = blog_posts.users_id"
 	assert.Equal(t, expectedQuery, sql)
 
@@ -154,12 +154,19 @@ func TestCRUD(t *testing.T) {
 		posts[0].Author.Created = time.Now()
 	}
 
+	// We don't want to compare time
+	posts[0].Created = nil
+
+	// Pointer values
+	usersID := 1
+	body := "More Content For Better SEO"
+
 	expected := []BlogPosts{
 		BlogPosts{
 			ID:      2,
-			UsersID: nil,
+			UsersID: &usersID,
 			Title:   "10 queries to run",
-			Body:    nil,
+			Body:    &body,
 			Created: nil,
 			Author: &Users{
 				ID:        1,
@@ -171,13 +178,11 @@ func TestCRUD(t *testing.T) {
 			},
 		},
 	}
-
 	assert.True(t, reflect.DeepEqual(expected, posts))
 
 	// var users []Users
-	// q := New(db)
-	// slct := q.Select("*")
-	// err := slct.From(T("users")).Where(C("id").Eq(1)).ScanStructs(&users)
+	// slct = q.Select("*")
+	// err = slct.From(T("users")).Where(C("id").Eq(1)).ScanStruct(&users)
 	// log.Println(err)
 	// spew.Dump(users)
 
