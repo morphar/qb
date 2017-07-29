@@ -139,17 +139,26 @@ func (c Column) String() (str string) {
 	return c.SelectExpr.Expr.String()
 }
 
-func C(s interface{}) Column {
+func C(s ...interface{}) Column {
 	var parts []string
 
-	if val, ok := s.(parser.SelectExpr); ok {
-		return Column{val}
-	} else if val, ok := s.(*parser.UnresolvedName); ok {
-		return Column{parser.SelectExpr{Expr: val}}
-	} else if val, ok := s.(Column); ok {
-		return val
-	} else if val, ok := s.(string); ok {
-		parts = strings.Split(val, ".")
+	if len(s) == 1 {
+		if val, ok := s[0].(parser.SelectExpr); ok {
+			return Column{val}
+		} else if val, ok := s[0].(*parser.UnresolvedName); ok {
+			return Column{parser.SelectExpr{Expr: val}}
+		} else if val, ok := s[0].(Column); ok {
+			return val
+		} else if val, ok := s[0].(string); ok {
+			parts = strings.Split(val, ".")
+		}
+	} else {
+		// Try to see if this is a string parts. E.g. C("tbl", "col")
+		for _, sParam := range s {
+			if sStr, ok := sParam.(string); ok {
+				parts = append(parts, sStr)
+			}
+		}
 	}
 
 	c := Column{}
