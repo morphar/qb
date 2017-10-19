@@ -68,6 +68,7 @@ func TestCRUDBasicDBNULLTest(t *testing.T) {
 	count, err := res.RowsAffected()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, int(count))
+	// TODO: This only works, because we're NOT talking to a Postgres DB....!
 	id, err := res.LastInsertId()
 	assert.NoError(t, err)
 	assert.Equal(t, 2, int(id))
@@ -134,25 +135,16 @@ func TestCRUD(t *testing.T) {
 
 	var posts []BlogPosts
 	q := New(db)
-	slct := q.Select("blog_posts.*", "users.*")
+	slct := q.Select("*")
 	slct.From("blog_posts")
-	slct.LeftJoin("users", C("users.id").Eq(C("blog_posts.users_id")))
 	sql, err := slct.SQL()
 	assert.NoError(t, err)
-	expectedQuery := "SELECT blog_posts.*, users.*"
-	expectedQuery += " FROM blog_posts LEFT JOIN users ON users.id = blog_posts.users_id"
+	expectedQuery := "SELECT * FROM blog_posts"
 	assert.Equal(t, expectedQuery, sql)
 
 	err = slct.ScanStructs(&posts)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(posts))
-
-	if len(posts) == 2 {
-		assert.True(t, time.Now().After(posts[0].Author.Created))
-		assert.True(t, posts[0].Author.Created.After(time.Now().Add(-time.Hour)))
-
-		posts[0].Author.Created = time.Now()
-	}
 
 	// We don't want to compare time
 	posts[0].Created = nil
@@ -162,6 +154,39 @@ func TestCRUD(t *testing.T) {
 	body := "More Content For Better SEO"
 
 	expected := []BlogPosts{
+		BlogPosts{
+			ID:      2,
+			UsersID: &usersID,
+			Title:   "10 queries to run",
+			Body:    &body,
+			Created: nil,
+		},
+	}
+	assert.True(t, reflect.DeepEqual(expected, posts))
+
+	posts = []BlogPosts{}
+	q = New(db)
+	slct = q.Select("blog_posts.*", "users.*")
+	slct.From("blog_posts")
+	slct.LeftJoin("users", C("users.id").Eq(C("blog_posts.users_id")))
+	sql, err = slct.SQL()
+	assert.NoError(t, err)
+	expectedQuery = "SELECT blog_posts.*, users.*"
+	expectedQuery += " FROM blog_posts LEFT JOIN users ON users.id = blog_posts.users_id"
+	assert.Equal(t, expectedQuery, sql)
+
+	err = slct.ScanStructs(&posts)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(posts))
+
+	// We don't want to compare time
+	posts[0].Created = nil
+
+	// Pointer values
+	usersID = 1
+	body = "More Content For Better SEO"
+
+	expected = []BlogPosts{
 		BlogPosts{
 			ID:      2,
 			UsersID: &usersID,

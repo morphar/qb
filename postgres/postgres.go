@@ -113,6 +113,12 @@ func (c Column) As(as string) Column {
 }
 
 func (c Column) GetColumn() (str string) {
+	if star, ok := c.SelectExpr.Expr.(parser.UnqualifiedStar); ok {
+		return star.String()
+	}
+	if _, ok := c.SelectExpr.Expr.(*parser.UnresolvedName); !ok {
+		return
+	}
 	if l := len((*c.SelectExpr.Expr.(*parser.UnresolvedName))); l > 0 {
 		str = parser.AsString((*c.SelectExpr.Expr.(*parser.UnresolvedName))[l-1])
 	}
@@ -120,6 +126,9 @@ func (c Column) GetColumn() (str string) {
 }
 
 func (c Column) GetTable() (str string) {
+	if _, ok := c.SelectExpr.Expr.(*parser.UnresolvedName); !ok {
+		return
+	}
 	if l := len(*c.SelectExpr.Expr.(*parser.UnresolvedName)); l > 1 {
 		str = parser.AsString((*c.SelectExpr.Expr.(*parser.UnresolvedName))[l-2])
 	}
@@ -127,6 +136,9 @@ func (c Column) GetTable() (str string) {
 }
 
 func (c Column) GetDatabase() (str string) {
+	if _, ok := c.SelectExpr.Expr.(*parser.UnresolvedName); !ok {
+		return
+	}
 	if l := len(c.SelectExpr.Expr.(parser.UnresolvedName)); l > 2 {
 		str = parser.AsString((*c.SelectExpr.Expr.(*parser.UnresolvedName))[l-3])
 	}

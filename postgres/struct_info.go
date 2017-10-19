@@ -141,7 +141,7 @@ func getFieldInfo(field reflect.StructField) (fieldInfo *FieldInfo) {
 		// Rule out some wellknown types, that could be vcolumn vals
 		// Not that important.. They will just be cached...
 		switch fieldInfo.BaseType.String() {
-		case "time.Time", "json.RawMessage":
+		case "time.Time", "timestamp.Timestamp", "json.RawMessage":
 			// Do nothing. These are legit single val structs
 
 		case "sql.RawBytes", "sql.NullString", "sql.NullInt64", "sql.NullFloat64", "sql.NullBool":

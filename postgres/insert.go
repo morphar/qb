@@ -53,6 +53,39 @@ func (q *InsertQuery) Into(into interface{}) *InsertQuery {
 	return q
 }
 
+func (q *InsertQuery) ReturnId() (id int64, err error) {
+	q.stmt.Returning = &parser.ReturningExprs{
+		parser.SelectExpr{
+			Expr: C("id").Expr,
+		},
+	}
+
+	query := q.stmt.String()
+	err = q.db.QueryRow(query).Scan(&id)
+
+	return
+}
+
+func (q *InsertQuery) Returning(fields ...interface{}) *InsertQuery {
+	if q.stmt.Returning == nil {
+		q.stmt.Returning = &parser.ReturningExprs{}
+	} else if _, ok := q.stmt.Returning.(*parser.NoReturningClause); ok {
+		q.stmt.Returning = &parser.ReturningExprs{}
+	}
+
+	rtrn := *q.stmt.Returning.(*parser.ReturningExprs)
+
+	for _, field := range fields {
+		rtrn = append(rtrn, parser.SelectExpr{
+			Expr: C(field).Expr,
+		})
+	}
+
+	q.stmt.Returning = &rtrn
+
+	return q
+}
+
 // TODO: add some error handling
 func (q *InsertQuery) SQL() (sql string, err error) {
 	if isValid, err := q.queryIsValid(); !isValid {
@@ -176,8 +209,18 @@ func (q *InsertQuery) getFieldsValues(val interface{}) (cols []Column, vals []in
 				val = field.Interface()
 			}
 
-			cols = append(cols, C(colName))
-			vals = append(vals, val)
+			// TODO: This should ONLY be when a column is autoincremented
+			// UPDATE: This should probably be up to the consumer of this method...
+			// if colName != "id" {
+			// 	cols = append(cols, C(colName))
+			// 	vals = append(vals, val)
+			// }
+
+			if colName != "id" || val != int64(0) {
+				cols = append(cols, C(colName))
+				vals = append(vals, val)
+			}
+
 		}
 	}
 

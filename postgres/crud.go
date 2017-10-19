@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	parser "github.com/morphar/sqlparsers/pkg/postgres"
 )
 
@@ -15,9 +17,14 @@ import (
 // That is currently only possibly from the *Query methods, as the validator method
 // sits on that
 
+// TODO: Try to get the postgres / mysql / sqlite as consistent as possible
+// E.g. make sure that we have a unified way of getting last insert id.
+// In postgres we could have our own result type for exec and always append a RETUNRIN
+
 func (q *QueryBase) Exec() (sql.Result, error) {
 	// Ensure we have an INSERT statement
 	// TODO: Guard against panics!
+	// TODO: Check if it's possible to "check syntax" by doing an exec with SELECT, then check for errors
 	if _, ok := q.stmt.(*parser.Select); ok {
 		return nil, errors.New("qb.Exec only works with anything but SELECT queries")
 	}
@@ -26,9 +33,28 @@ func (q *QueryBase) Exec() (sql.Result, error) {
 	return q.db.Exec(query)
 }
 
-func (q *QueryBase) ScanStructs(structs interface{}) error {
-	res := reflect.Indirect(reflect.ValueOf(structs))
+func (q *QueryBase) ScanStruct(strct interface{}) error {
+	val := reflect.ValueOf(strct)
+	if val.Kind() != reflect.Ptr || val.IsNil() {
+		return errors.New("The struct parameter must be a pointer to a non-nil struct value when calling ScanStructs")
+	}
 
+	// res := reflect.Indirect(reflect.ValueOf(strct))
+	structs := reflect.New(reflect.SliceOf(reflect.TypeOf(strct))).Interface()
+	if err := q.ScanStructs(structs); err != nil {
+		return err
+	}
+
+	resSlice := reflect.ValueOf(structs).Elem()
+	if !resSlice.IsNil() {
+		res := resSlice.Index(0)
+		val.Elem().Set(res.Elem())
+	}
+
+	return nil
+}
+
+func (q *QueryBase) ScanStructs(structs interface{}) error {
 	if q.db == nil {
 		return errors.New("No database provided. Did you initialize a QueryBuilder with qb.New(db)?")
 	}
@@ -47,7 +73,9 @@ func (q *QueryBase) ScanStructs(structs interface{}) error {
 	if val.Kind() != reflect.Ptr {
 		return errors.New("The structs parameter must be a pointer to a slice when calling ScanStructs")
 	}
-	if reflect.Indirect(val).Kind() != reflect.Slice {
+
+	res := reflect.Indirect(val)
+	if res.Kind() != reflect.Slice {
 		return errors.New("The structs parameter must be a pointer to a slice when calling ScanStructs")
 	}
 
@@ -69,6 +97,7 @@ func (q *QueryBase) ScanStructs(structs interface{}) error {
 
 	for rows.Next() {
 		scanMap, err := q.createScanMap(columns, mainStructInfo)
+
 		if err != nil {
 			log.Println(err)
 		}
@@ -81,7 +110,12 @@ func (q *QueryBase) ScanStructs(structs interface{}) error {
 		if err != nil {
 			return err
 		}
-		res.Set(reflect.Append(res, newStruct.Elem()))
+
+		if res.Type().Elem().Kind() == reflect.Ptr {
+			res.Set(reflect.Append(res, newStruct.Elem().Addr()))
+		} else {
+			res.Set(reflect.Append(res, newStruct.Elem()))
+		}
 	}
 
 	return err
@@ -137,7 +171,15 @@ func (q *QueryBase) createScanMap(resCols []string, mainStructInfo StructInfo) (
 
 		for _, curCol := range curCols {
 			if curField, ok := curStructInfo.Fields[curCol]; ok {
-				scanMap = append(scanMap, reflect.New(reflect.New(curField.Type).Type()).Interface())
+				// TODO: Ugly hack - can it be made prettier?
+				// Either it doesn't belong here or a more generic way of
+				//   doing this is needed
+				if curField.BaseType.String() == "timestamp.Timestamp" {
+					var newTime *time.Time
+					scanMap = append(scanMap, &newTime)
+				} else {
+					scanMap = append(scanMap, reflect.New(reflect.New(curField.Type).Type()).Interface())
+				}
 			} else {
 				errMsg := fmt.Sprintf("A match wasn't for for the request column: %s.%s", tableName, curCol)
 				return nil, errors.New(errMsg)
@@ -220,7 +262,22 @@ func (q *QueryBase) scanMapToStruct(resVals []interface{}, resCols []string, mai
 				f := curStructRef.Elem().FieldByName(curField.Name)
 				curVal := reflect.ValueOf(curVals[i]).Elem()
 				if !curVal.IsNil() {
-					f.Set(reflect.Indirect(curVal))
+
+					// TODO: Ugly hack - can it be made prettier?
+					// Either it doesn't belong here or a more generic way of
+					//   doing this is needed
+					if curField.BaseType.String() == "timestamp.Timestamp" {
+						newTime := curVal.Elem().Interface().(time.Time)
+						newTimestamp := timestamp.Timestamp{
+							Seconds: newTime.UTC().Unix(),
+							Nanos:   int32(newTime.Nanosecond()),
+						}
+						f.Set(reflect.ValueOf(&newTimestamp))
+					} else {
+						f.Set(reflect.Indirect(curVal))
+
+					}
+
 				}
 			} else {
 				errMsg := fmt.Sprintf("A match wasn't found for the request column: %s.%s", tableName, curCol)

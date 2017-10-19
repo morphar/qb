@@ -30,6 +30,13 @@ func TestInsertIsValid(t *testing.T) {
 }
 */
 
+func TestInsertReturning(t *testing.T) {
+	insert := Insert(testRow{1, "name"}).Into("test_table").Returning("id")
+	query, err := insert.SQL()
+	assert.NoError(t, err)
+	assert.Equal(t, `INSERT INTO test_table(id, "name") VALUES (1, 'name') RETURNING id`, query)
+}
+
 func TestInsertRowColsAndVals(t *testing.T) {
 	insert := Insert()
 	_, _, err := insert.rowColsAndVals()
@@ -75,10 +82,13 @@ func TestSimpleMapInsert(t *testing.T) {
 	// assert.NoError(t, err)
 }
 
-/*
 func TestSimpleStructInsert(t *testing.T) {
-	insert := Insert(testRow{1, "name"}, testRow{2, "other name"}).Into("items")
+	insert := Insert(testRow{1, "name"}).Into("items")
 	_, err := insert.SQL()
+	assert.NoError(t, err)
+
+	insert = Insert(testRow{1, "name"}, testRow{2, "other name"}).Into("items")
+	_, err = insert.SQL()
 	assert.NoError(t, err)
 
 	id1 := 1
@@ -107,4 +117,3 @@ func TestSimpleStructInsert(t *testing.T) {
 //  _, _, err := insert.SQL()
 //  assert.NoError(t, err)
 // }
-*/

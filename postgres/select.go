@@ -16,19 +16,11 @@ func (q *SelectQuery) Select(fields ...interface{}) *SelectQuery {
 		q.stmt.Select = &parser.SelectClause{}
 	}
 
-	if len(fields) > 0 {
-		for _, field := range fields {
-			selectClause := q.stmt.Select.(*parser.SelectClause)
-			selectClause.Exprs = append(selectClause.Exprs, parser.SelectExpr{
-				Expr: C(field).Expr,
-			})
-		}
-	} else {
+	for _, field := range fields {
 		selectClause := q.stmt.Select.(*parser.SelectClause)
 		selectClause.Exprs = append(selectClause.Exprs, parser.SelectExpr{
-			Expr: C("*").Expr,
+			Expr: C(field).Expr,
 		})
-
 	}
 
 	return q
